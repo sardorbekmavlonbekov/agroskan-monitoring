@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="uz" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroScan Monitoring - Qishloq Xo'jaligi Boshqaruv Tizimi</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind Custom Color Palette -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b'
+                        },
+                        agrogreen: {
+                            light: '#22c55e',
+                            DEFAULT: '#138842',
+                            dark: '#0f5132'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+        }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-300" id="appBody">
+
+    <!-- LOGIN / REGISTER OVERLAY MODAL -->
+    <div id="authModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <!-- Modal Header / Tabs -->
+            <div class="bg-gradient-to-r from-emerald-700 to-green-600 p-6 text-white text-center relative">
+                <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mx-auto mb-3 shadow-inner">
+                    <i class="fa-solid fa-seedling text-2xl text-white"></i>
+                </div>
+                <h2 class="text-2xl font-bold">AgroScan Monitoring</h2>
+                <p class="text-emerald-100 text-xs mt-1">Qishloq xo'jaligi va fermerlik tizimiga xush kelibsiz</p>
+                
+                <div class="flex bg-emerald-900/40 p-1 rounded-2xl mt-5 text-xs font-semibold">
+                    <button onclick="switchAuthTab('login')" id="tabBtnLogin" class="flex-1 py-2 rounded-xl transition bg-white text-emerald-800 shadow">Tizimga kirish</button>
+                    <button onclick="switchAuthTab('register')" id="tabBtnRegister" class="flex-1 py-2 rounded-xl transition text-emerald-100 hover:text-white">Ro'yxatdan o'tish</button>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleAuthLogin(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Telefon raqam yoki Login</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                        <input type="text" id="loginUsername" required value="+998 90 123 45 67" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Parol</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                        <input type="password" id="loginPassword" required value="••••••••" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <label class="flex items-center space-x-2 text-slate-500 dark:text-slate-400 cursor-pointer">
+                        <input type="checkbox" checked class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                        <span>Eslab qolish</span>
+                    </label>
+                    <a href="#" onclick="showToast('Parolni tiklash uchun SMS yuborildi!')" class="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">Parolni unutdingizmi?</a>
+                </div>
+                <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>Kirish</span>
+                </button>
+            </form>
+
+            <!-- Register Form (Initially Hidden) -->
+            <form id="registerForm" onsubmit="handleAuthRegister(event)" class="p-6 space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">To'liq Ism (F.I.SH)</label>
+                    <input type="text" id="regFullName" required placeholder="Masalan: Sardorbek Mavlonbekov" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Telefon raqam</label>
+                    <input type="tel" id="regPhone" required placeholder="+998 90 000 00 00" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Xo'jalik nomi va Viloyat</label>
+                    <input type="text" id="regFarmName" required placeholder="Vodiy Agro, Farg'ona" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Yangi Parol</label>
+                    <input type="password" id="regPassword" required placeholder="••••••••" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Akkount Yaratish</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN NAVIGATION BAR -->
+    <header class="bg-white/90 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand & Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('profil')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-green-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+                    <i class="fa-solid fa-seedling text-lg"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold bg-gradient-to-r from-emerald-700 to-green-600 dark:from-emerald-400 dark:to-green-400 bg-clip-text text-transparent">AgroScan</span>
+                    <span class="text-[10px] block text-slate-400 font-bold uppercase tracking-wider">Monitoring</span>
+                </div>
+            </div>
+
+            <!-- Desktop Navigation Menu Tabs -->
+            <nav class="hidden md:flex items-center space-x-1 bg-slate-100 dark:bg-slate-900/60 p-1.5 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 text-xs font-bold">
+                <button onclick="switchTab('profil')" id="navTabProfil" class="px-4 py-2 rounded-xl transition flex items-center space-x-2 bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm">
+                    <i class="fa-solid fa-user-gear"></i>
+                    <span>Profil</span>
+                </button>
+                <button onclick="switchTab('kundalik')" id="navTabKundalik" class="px-4 py-2 rounded-xl transition flex items-center space-x-2 text-slate-600 dark:text-slate-300 hover:text-emerald-600">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Kundalik</span>
+                </button>
+                <button onclick="switchTab('kalendar')" id="navTabKalendar" class="px-4 py-2 rounded-xl transition flex items-center space-x-2 text-slate-600 dark:text-slate-300 hover:text-emerald-600">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span>Kalendar</span>
+                </button>
+                <button onclick="switchTab('obhavo')" id="navTabObhavo" class="px-4 py-2 rounded-xl transition flex items-center space-x-2 text-slate-600 dark:text-slate-300 hover:text-emerald-600">
+                    <i class="fa-solid fa-cloud-sun-rain"></i>
+                    <span>Ob-havo & Iqlim</span>
+                </button>
+                <button onclick="switchTab('harajatlar')" id="navTabHarajatlar" class="px-4 py-2 rounded-xl transition flex items-center space-x-2 text-slate-600 dark:text-slate-300 hover:text-emerald-600">
+                    <i class="fa-solid fa-wallet"></i>
+                    <span>Harajatlar</span>
+                </button>
+                <button onclick="switchTab('arxiv')" id="navTabArxiv" class="px-4 py-2 rounded-xl transition flex items-center space-x-2 text-slate-600 dark:text-slate-300 hover:text-emerald-600">
+                    <i class="fa-solid fa-box-archive"></i>
+                    <span>Arxiv DB</span>
+                </button>
+            </nav>
+
+            <!-- User Utilities & Controls -->
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-600 transition" title="Mavzu">
+                    <i id="themeToggleIcon" class="fa-solid fa-moon"></i>
+                </button>
+
+                <!-- Profile Dropdown Widget -->
+                <div class="flex items-center space-x-2 pl-2 border-l border-slate-200 dark:border-slate-700">
+                    <img id="navAvatar" src="https://placehold.co/100x100/10b981/ffffff?text=SM" alt="Avatar" class="w-9 h-9 rounded-xl object-cover ring-2 ring-emerald-500/40">
+                    <div class="hidden lg:block text-left">
+                        <p id="navUserName" class="text-xs font-bold leading-tight">Sardorbek M.</p>
+                        <p id="navUserRole" class="text-[10px] text-slate-400">Bosh Agronom</p>
+                    </div>
+                    <button onclick="handleLogout()" class="ml-1 p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition" title="Chiqish">
+                        <i class="fa-solid fa-right-from-bracket text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Bottom Tab Navigation -->
+        <div class="md:hidden flex items-center justify-around bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 py-2 px-1 text-[11px] font-semibold">
+            <button onclick="switchTab('profil')" class="flex flex-col items-center text-emerald-600"><i class="fa-solid fa-user-gear text-sm mb-0.5"></i>Profil</button>
+            <button onclick="switchTab('kundalik')" class="flex flex-col items-center text-slate-500"><i class="fa-solid fa-book-open text-sm mb-0.5"></i>Kundalik</button>
+            <button onclick="switchTab('kalendar')" class="flex flex-col items-center text-slate-500"><i class="fa-solid fa-calendar-days text-sm mb-0.5"></i>Kalendar</button>
+            <button onclick="switchTab('obhavo')" class="flex flex-col items-center text-slate-500"><i class="fa-solid fa-cloud-sun text-sm mb-0.5"></i>Ob-havo</button>
+            <button onclick="switchTab('harajatlar')" class="flex flex-col items-center text-slate-500"><i class="fa-solid fa-wallet text-sm mb-0.5"></i>Harajat</button>
+            <button onclick="switchTab('arxiv')" class="flex flex-col items-center text-slate-500"><i class="fa-solid fa-box-archive text-sm mb-0.5"></i>Arxiv</button>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ==================== 1. SHAXSIY PROFIL BO'LIMI ==================== -->
+        <section id="sectionProfil" class="space-y-6">
+            <div class="bg-gradient-to-br from-emerald-800 via-emerald-700 to-green-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="flex flex-col md:flex-row items-center gap-6 z-10 relative">
+                    <img id="profileAvatarBig" src="https://placehold.co/150x150/10b981/ffffff?text=SM" alt="Profile" class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover ring-4 ring-white/30 shadow-xl">
+                    <div class="space-y-2 text-center md:text-left flex-1">
+                        <div class="inline-flex items-center space-x-2 bg-emerald-900/50 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold text-emerald-200 border border-emerald-400/20">
+                            <i class="fa-solid fa-shield-halved text-emerald-300"></i>
+                            <span>Tasdiqlangan Xo'jalik Boshlig'i</span>
+                        </div>
+                        <h1 id="profileNameBig" class="text-2xl sm:text-3xl font-extrabold">Sardorbek Mavlonbekov</h1>
+                        <p id="profileFarmBig" class="text-emerald-100 text-sm"><i class="fa-solid fa-location-dot mr-1.5 text-emerald-300"></i>"Vodiy Oltin Zamin" MCHJ • Toshkent vil., Qibray tumani</p>
+                    </div>
+                    <button onclick="openEditProfileModal()" class="px-5 py-2.5 bg-white text-emerald-800 font-bold text-xs rounded-xl hover:bg-emerald-50 transition shadow-md flex items-center space-x-2">
+                        <i class="fa-solid fa-user-pen"></i>
+                        <span>Profilni Tahrirlash</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- User Information Card -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                    <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-700 pb-3 flex items-center">
+                        <i class="fa-solid fa-id-card text-emerald-600 mr-2"></i> Shaxsiy Ma'lumotlar
+                    </h3>
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <span class="text-slate-400 block">Telefon raqam:</span>
+                            <span id="profPhone" class="font-bold text-slate-700 dark:text-slate-200">+998 (90) 123-45-67</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block">Elektron pochta:</span>
+                            <span id="profEmail" class="font-bold text-slate-700 dark:text-slate-200">sardorbek.agrotech@gmail.com</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block">Tizimga a'zo bo'lingan:</span>
+                            <span class="font-bold text-slate-700 dark:text-slate-200">14-Mart, 2024-yil</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block">Xo'jalik Guvohnomasi kodi:</span>
+                            <span class="font-mono bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-emerald-600 dark:text-emerald-400 font-bold">AGRO-UZ-998241</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Farm Overview Parameters Card -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                    <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-700 pb-3 flex items-center">
+                        <i class="fa-solid fa-tractor text-emerald-600 mr-2"></i> Xo'jalik Parametrlari
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3 text-center">
+                        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800/40 rounded-2xl">
+                            <span class="text-slate-400 text-[11px] block">Jami Yer Maydoni</span>
+                            <span id="profLandArea" class="text-xl font-extrabold text-emerald-700 dark:text-emerald-400">450 ga</span>
+                        </div>
+                        <div class="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-800/40 rounded-2xl">
+                            <span class="text-slate-400 text-[11px] block">Maydonlar Soni</span>
+                            <span class="text-xl font-extrabold text-blue-700 dark:text-blue-400">8 ta</span>
+                        </div>
+                        <div class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-800/40 rounded-2xl">
+                            <span class="text-slate-400 text-[11px] block">Asosiy Ekin</span>
+                            <span class="text-sm font-bold text-amber-700 dark:text-amber-400">Bug'doy, Paxta</span>
+                        </div>
+                        <div class="p-3 bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-800/40 rounded-2xl">
+                            <span class="text-slate-400 text-[11px] block">Ishchilar Soni</span>
+                            <span class="text-xl font-extrabold text-purple-700 dark:text-purple-400">18 kishi</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security & Quick Settings -->
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                    <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-700 pb-3 flex items-center">
+                        <i class="fa-solid fa-shield-heart text-emerald-600 mr-2"></i> Xavfsizlik & Sozlama
+                    </h3>
+                    <div class="space-y-3">
+                        <button onclick="showToast('SMS Kod orqali 2FA faollashtirildi')" class="w-full text-left p-3 rounded-2xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold flex items-center justify-between transition">
+                            <span class="flex items-center space-x-2">
+                                <i class="fa-solid fa-key text-emerald-600"></i>
+                                <span>2-Bosqichli Himoya (2FA)</span>
+                            </span>
+                            <span class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full">Faol</span>
+                        </button>
+                        <button onclick="showToast('SMS Bildirishnomalar yoqildi')" class="w-full text-left p-3 rounded-2xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold flex items-center justify-between transition">
+                            <span class="flex items-center space-x-2">
+                                <i class="fa-solid fa-comment-sms text-blue-600"></i>
+                                <span>SMS Ogohlantirishlar</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
+                        </button>
+                        <button onclick="handleLogout()" class="w-full text-left p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 text-xs font-semibold flex items-center justify-between hover:bg-rose-100 transition">
+                            <span class="flex items-center space-x-2">
+                                <i class="fa-solid fa-power-off"></i>
+                                <span>Tizimdan Chiqish</span>
+                            </span>
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. KUNDALIK BO'LIMI ==================== -->
+        <section id="sectionKundalik" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">Fermerlik Kundaligi va Yozuvlar</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Har bir maydonda bajarilgan kundalik yumushlar, sug'orish va ishlov berish jurnali</p>
+                </div>
+                <button onclick="openAddDiaryModal()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-2xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Yangi Yozuv Qo'shish</span>
+                </button>
+            </div>
+
+            <!-- Diary Filter Tabs -->
+            <div class="flex items-center space-x-2 overflow-x-auto pb-2 text-xs font-semibold">
+                <button onclick="filterDiary('all')" class="px-4 py-2 bg-emerald-600 text-white rounded-xl shadow-sm">Barcha Yozuvlar</button>
+                <button onclick="filterDiary('Sug\'orish')" class="px-4 py-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-50 transition border border-slate-200 dark:border-slate-700">Sug'orish</button>
+                <button onclick="filterDiary('Dori sepish')" class="px-4 py-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-50 transition border border-slate-200 dark:border-slate-700">Dori & O'g'it</button>
+                <button onclick="filterDiary('Ekish')" class="px-4 py-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-50 transition border border-slate-200 dark:border-slate-700">Ekish & Haydash</button>
+                <button onclick="filterDiary('Hosil terish')" class="px-4 py-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-50 transition border border-slate-200 dark:border-slate-700">Hosil Yig'ish</button>
+            </div>
+
+            <!-- Diary Entries Feed Container -->
+            <div id="diaryListContainer" class="space-y-4">
+                <!-- Dynamic Diary items will render here via JS -->
+            </div>
+        </section>
+
+        <!-- ==================== 3. KALENDAR BO'LIMI ==================== -->
+        <section id="sectionKalendar" class="space-y-6 hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
+                <!-- Calendar Header Controls -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-calendar text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 id="currentCalendarMonth" class="text-xl font-extrabold text-slate-800 dark:text-slate-100">Oktyabr, 2026</h2>
+                            <p class="text-xs text-slate-400">Agrotexnik tadbirlar reja-jadvallari</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="changeCalendarMonth(-1)" class="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                        <button onclick="changeCalendarMonth(1)" class="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                        <button onclick="openAddEventModal()" class="ml-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center space-x-1.5">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Tadbirlar Qo'shish</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Calendar Days Grid Header -->
+                <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <div>Du</div><div>Se</div><div>Ch</div><div>Pa</div><div>Ju</div><div>Sh</div><div>Yak</div>
+                </div>
+
+                <!-- Calendar Monthly Grid -->
+                <div id="calendarGrid" class="grid grid-cols-7 gap-2 text-xs">
+                    <!-- Dynamic Calendar Cells rendered by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 4. OB-HAVO & IQLIM BO'LIMI ==================== -->
+        <section id="sectionObhavo" class="space-y-6 hidden">
+            <!-- Main Current Weather Box -->
+            <div class="bg-gradient-to-r from-blue-700 via-indigo-600 to-sky-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="space-y-3">
+                        <span class="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold">
+                            <i class="fa-solid fa-location-arrow"></i>
+                            <span id="weatherLocation">Toshkent Viloyati, Qibray Tumani</span>
+                        </span>
+                        <div class="flex items-center space-x-4">
+                            <span id="weatherTemp" class="text-5xl sm:text-6xl font-extrabold tracking-tight">24°C</span>
+                            <div>
+                                <h3 id="weatherCondition" class="text-xl font-bold">Ochiq va Quyoshli</h3>
+                                <p class="text-xs text-blue-100">Namlik: <strong id="weatherHumidity">45%</strong> • Shamol: <strong id="weatherWind">4.2 m/s</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Weather Visual Icon -->
+                    <div class="text-center">
+                        <i class="fa-solid fa-sun-cloud text-7xl text-amber-300 drop-shadow-lg animate-pulse"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weather Metrics Detailed Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-wind"></i>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 text-xs font-medium block">Shamol Tezligi</span>
+                        <span class="text-lg font-bold text-slate-800 dark:text-slate-100">4.2 m/s</span>
+                        <span class="text-[10px] text-emerald-600 block">Shimoliy-Sharqiy</span>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-2xl bg-cyan-50 dark:bg-cyan-950 text-cyan-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-droplet"></i>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 text-xs font-medium block">Havo Namligi</span>
+                        <span class="text-lg font-bold text-slate-800 dark:text-slate-100">45%</span>
+                        <span class="text-[10px] text-blue-500 block">Me'yoriy daraja</span>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950 text-purple-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-gauge"></i>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 text-xs font-medium block">Atmosfera Bosimi</span>
+                        <span class="text-lg font-bold text-slate-800 dark:text-slate-100">761 mmHg</span>
+                        <span class="text-[10px] text-slate-400 block">Barqaror</span>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950 text-amber-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-cloud-rain"></i>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 text-xs font-medium block">Yog'ingarchilik</span>
+                        <span class="text-lg font-bold text-slate-800 dark:text-slate-100">10% ehtimol</span>
+                        <span class="text-[10px] text-amber-600 block">Yog'ingarchilik kutilmayapti</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5-Day Weather Forecast -->
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center">
+                    <i class="fa-solid fa-calendar-week text-emerald-600 mr-2"></i> 5 Kunlik Ob-Havo Prognozi
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <div class="p-4 bg-slate-50 dark:bg-slate-700/40 rounded-2xl text-center space-y-2 border border-slate-100 dark:border-slate-700">
+                        <span class="text-xs font-bold text-slate-500 block">Bugun</span>
+                        <i class="fa-solid fa-sun text-2xl text-amber-500"></i>
+                        <p class="text-base font-extrabold">24°C</p>
+                        <span class="text-[10px] text-slate-400 block">Quyoshli</span>
+                    </div>
+                    <div class="p-4 bg-slate-50 dark:bg-slate-700/40 rounded-2xl text-center space-y-2 border border-slate-100 dark:border-slate-700">
+                        <span class="text-xs font-bold text-slate-500 block">Ertaga</span>
+                        <i class="fa-solid fa-cloud-sun text-2xl text-amber-400"></i>
+                        <p class="text-base font-extrabold">22°C</p>
+                        <span class="text-[10px] text-slate-400 block">Biroq bulutli</span>
+                    </div>
+                    <div class="p-4 bg-slate-50 dark:bg-slate-700/40 rounded-2xl text-center space-y-2 border border-slate-100 dark:border-slate-700">
+                        <span class="text-xs font-bold text-slate-500 block">Payshanba</span>
+                        <i class="fa-solid fa-cloud-rain text-2xl text-blue-400"></i>
+                        <p class="text-base font-extrabold">18°C</p>
+                        <span class="text-[10px] text-slate-400 block">Yomg'ir</span>
+                    </div>
+                    <div class="p-4 bg-slate-50 dark:bg-slate-700/40 rounded-2xl text-center space-y-2 border border-slate-100 dark:border-slate-700">
+                        <span class="text-xs font-bold text-slate-500 block">Juma</span>
+                        <i class="fa-solid fa-cloud text-2xl text-slate-400"></i>
+                        <p class="text-base font-extrabold">20°C</p>
+                        <span class="text-[10px] text-slate-400 block">Bulutli</span>
+                    </div>
+                    <div class="p-4 bg-slate-50 dark:bg-slate-700/40 rounded-2xl text-center space-y-2 border border-slate-100 dark:border-slate-700">
+                        <span class="text-xs font-bold text-slate-500 block">Shanba</span>
+                        <i class="fa-solid fa-sun text-2xl text-amber-500"></i>
+                        <p class="text-base font-extrabold">25°C</p>
+                        <span class="text-[10px] text-slate-400 block">Ochiq havo</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 5. HARAJATLAR MONITORINGI ==================== -->
+        <section id="sectionHarajatlar" class="space-y-6 hidden">
+            <!-- Expense Metrics Summary Header -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
+                    <span class="text-xs text-slate-400 font-semibold uppercase block">Shu Oydagi Jami Sarf</span>
+                    <h3 id="totalExpensesAmount" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">42,800,000 UZS</h3>
+                    <p class="text-[11px] text-slate-400">O'tgan oyga nisbatan -5% kamroq</p>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
+                    <span class="text-xs text-slate-400 font-semibold uppercase block">Oylik Byudjet Limit</span>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-slate-100">60,000,000 UZS</h3>
+                    <div class="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div class="bg-emerald-500 h-full rounded-full" style="width: 71%"></div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs text-slate-400 font-semibold uppercase block">Eng Katta Harajat Turi</span>
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mt-1">Yoqilg'i va Mineral O'g'it</h3>
+                    </div>
+                    <button onclick="openAddExpenseModal()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        <span>Yangi Harajat Kiritish</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Expense Table & Breakdown -->
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-700">
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base">Moliyaviy Harajatlar Jurnali</h3>
+                    <input type="text" id="expenseSearchInput" onkeyup="searchExpenses()" placeholder="Izlash (kategoriya, tavsif)..." class="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs focus:ring-2 focus:ring-emerald-500 outline-none w-full sm:w-64">
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                        <thead class="bg-slate-50 dark:bg-slate-700/50 uppercase text-[10px] text-slate-400 font-bold">
+                            <tr>
+                                <th class="p-3 rounded-l-xl">Sana</th>
+                                <th class="p-3">Kategoriya</th>
+                                <th class="p-3">Tavsif va Maydon</th>
+                                <th class="p-3">Summa (UZS)</th>
+                                <th class="p-3 rounded-r-xl text-right">Amal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenseTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                            <!-- Dynamic expense rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 6. ARXIV VA MA'LUMOTLAR BAZASI ==================== -->
+        <section id="sectionArxiv" class="space-y-6 hidden">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">Arxiv va Tarixiy Ma'lumotlar Bazasi</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">O'tgan mavsumlar hosildorligi, o'g'itlash tarixi va shartnomalar hujjati</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <select id="archiveYearFilter" onchange="renderArchiveRecords()" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-semibold outline-none">
+                        <option value="all">Barcha Yillar</option>
+                        <option value="2026">2026-yil Mavsumi</option>
+                        <option value="2025">2025-yil Mavsumi</option>
+                        <option value="2024">2024-yil Mavsumi</option>
+                    </select>
+                    <button onclick="showToast('Arxiv bazasi fayli yuklab olindi (Excel)')" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                        <span>Eksport (Excel)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Archive Cards Grid -->
+            <div id="archiveGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Archive items rendered by JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: EDIT PROFILE -->
+    <div id="modalEditProfile" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+                <h3 class="font-bold text-base text-slate-800 dark:text-slate-100">Profil Ma'lumotlarini Tahrirlash</h3>
+                <button onclick="closeModal('modalEditProfile')" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveProfileChanges(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">To'liq F.I.SH</label>
+                    <input type="text" id="editName" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Xo'jalik / MCHJ Nomi va Hudud</label>
+                    <input type="text" id="editFarm" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Telefon</label>
+                        <input type="text" id="editPhone" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Yer Maydoni (ga)</label>
+                        <input type="text" id="editLand" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition">O'zgarishlarni Saqlash</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD DIARY ENTRY -->
+    <div id="modalAddDiary" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+                <h3 class="font-bold text-base text-slate-800 dark:text-slate-100">Kundalikka Yangi Yozuv Kiritish</h3>
+                <button onclick="closeModal('modalAddDiary')" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveDiaryEntry(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Amal / Ish Turi</label>
+                    <select id="diaryCategory" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                        <option value="Sug'orish">Sug'orish amaliyoti</option>
+                        <option value="Dori sepish">O'g'itlash va Dori sepish</option>
+                        <option value="Ekish">Ekish va Yerni tayyorlash</option>
+                        <option value="Hosil terish">Hosilni yig'ishtirish</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Maydon Nomi</label>
+                        <input type="text" id="diaryField" required placeholder="Masalan: 3-Maydon Bug'doy" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Sana</label>
+                        <input type="date" id="diaryDate" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Batafsil Izoh va Natija</label>
+                    <textarea id="diaryContent" required rows="3" placeholder="Bajarilgan ish hajmi, ishlatilgan texnika va suv sarfi..." class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none"></textarea>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition">Yozuvni Saqlash</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD EXPENSE -->
+    <div id="modalAddExpense" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+                <h3 class="font-bold text-base text-slate-800 dark:text-slate-100">Yangi Harajat Kiritish</h3>
+                <button onclick="closeModal('modalAddExpense')" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveExpenseEntry(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Kategoriya</label>
+                    <select id="expCategory" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                        <option value="Yoqilg'i">Yoqilg'i (Dizel/Benzin)</option>
+                        <option value="Mineral O'g'it">Mineral O'g'it va Kimyoviy ishlov</option>
+                        <option value="Urug'lik">Urug'lik va Ko'chatlar</option>
+                        <option value="Ish Haqi">Ishchilar Ish Haqi</option>
+                        <option value="Texnika Ijara">Texnika va Traktor xizmati</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Summa (UZS)</label>
+                        <input type="number" id="expAmount" required placeholder="5000000" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Sana</label>
+                        <input type="date" id="expDate" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Tavsif</label>
+                    <input type="text" id="expDesc" required placeholder="Masalan: 500 litr Dizel yoqilg'isi sotib olindi" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition">Harajatni Saqlash</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- APPLICATION STATE & LOGIC -->
+    <script>
+        // Data Stores
+        let currentUser = {
+            name: "Sardorbek Mavlonbekov",
+            farm: "Vodiy Oltin Zamin MCHJ",
+            phone: "+998 (90) 123-45-67",
+            email: "sardorbek.agrotech@gmail.com",
+            land: "450 ga"
+        };
+
+        let diaryEntries = [
+            { id: 1, category: "Sug'orish", field: "1-Maydon Bug'doy", date: "2026-10-12", text: "Tungi sug'orish nasosi faollashtirildi. 12 soat davomida suv berildi." },
+            { id: 2, category: "Dori sepish", field: "2-Maydon Paxta", date: "2026-10-10", text: "Zararkunandalarga qarshi biologik ishlov berildi." },
+            { id: 3, category: "Ekish", field: "4-Maydon Soya", date: "2026-10-05", text: "Yerni yumshatib soya urug'i qadandi." }
+        ];
+
+        let expenseEntries = [
+            { id: 1, date: "2026-10-11", category: "Yoqilg'i", desc: "Kombayn va traktorlar uchun 1200 litr dizel", amount: 16800000 },
+            { id: 2, date: "2026-10-08", category: "Mineral O'g'it", desc: "Ammofos va Karbamid o'g'it xaridi", amount: 18500000 },
+            { id: 3, date: "2026-10-02", category: "Ish Haqi", desc: "Mavsumiy ishchilarning haftalik ish haqi", amount: 7500000 }
+        ];
+
+        let archiveData = [
+            { id: 1, year: "2025", title: "2025-Yil Bug'doy Hosil Hisoboti", crop: "Kuzgi Bug'doy", yield: "68 sentner/ga", status: "Yopilgan Mavsum" },
+            { id: 2, year: "2025", title: "2025-Yil Paxta Terim Bazasi", crop: "Paxta (Chinoz-2)", yield: "42 sentner/ga", status: "Yopilgan Mavsum" },
+            { id: 3, year: "2024", title: "2024-Yil Suv va O'g'it Tahlili", crop: "Barcha Ekinlar", yield: "O'rtacha 92%", status: "Arxivlangan" }
+        ];
+
+        // INIT APPLICATION ON LOAD
+        window.onload = function() {
+            renderDiaryEntries();
+            renderExpenses();
+            renderCalendar();
+            renderArchiveRecords();
+            updateProfileUI();
+            
+            // Default date pickers to today
+            const today = new Date().toISOString().split('T')[0];
+            if(document.getElementById('diaryDate')) document.getElementById('diaryDate').value = today;
+            if(document.getElementById('expDate')) document.getElementById('expDate').value = today;
+        };
+
+        // NAVIGATION TAB SWITCHER
+        function switchTab(tabKey) {
+            const sections = ['sectionProfil', 'sectionKundalik', 'sectionKalendar', 'sectionObhavo', 'sectionHarajatlar', 'sectionArxiv'];
+            sections.forEach(s => {
+                const el = document.getElementById(s);
+                if (el) el.classList.add('hidden');
+            });
+
+            const activeSection = document.getElementById('section' + tabKey.charAt(0).toUpperCase() + tabKey.slice(1));
+            if (activeSection) activeSection.classList.remove('hidden');
+
+            // Update Tab Button Styles
+            const navButtons = ['navTabProfil', 'navTabKundalik', 'navTabKalendar', 'navTabObhavo', 'navTabHarajatlar', 'navTabArxiv'];
+            navButtons.forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    btn.className = "px-4 py-2 rounded-xl transition flex items-center space-x-2 text-slate-600 dark:text-slate-300 hover:text-emerald-600";
+                }
+            });
+
+            const currentBtn = document.getElementById('navTab' + tabKey.charAt(0).toUpperCase() + tabKey.slice(1));
+            if (currentBtn) {
+                currentBtn.className = "px-4 py-2 rounded-xl transition flex items-center space-x-2 bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm font-bold";
+            }
+        }
+
+        // AUTHENTICATION MODAL SWITCHER
+        function switchAuthTab(type) {
+            const loginForm = document.getElementById('loginForm');
+            const regForm = document.getElementById('registerForm');
+            const tabLogin = document.getElementById('tabBtnLogin');
+            const tabReg = document.getElementById('tabBtnRegister');
+
+            if (type === 'login') {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                tabLogin.className = "flex-1 py-2 rounded-xl transition bg-white text-emerald-800 shadow font-bold";
+                tabReg.className = "flex-1 py-2 rounded-xl transition text-emerald-100 hover:text-white font-medium";
+            } else {
+                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden');
+                tabReg.className = "flex-1 py-2 rounded-xl transition bg-white text-emerald-800 shadow font-bold";
+                tabLogin.className = "flex-1 py-2 rounded-xl transition text-emerald-100 hover:text-white font-medium";
+            }
+        }
+
+        function handleAuthLogin(e) {
+            e.preventDefault();
+            document.getElementById('authModal').classList.add('hidden');
+            showToast("Tizimga muvaffaqiyatli kirildi!");
+        }
+
+        function handleAuthRegister(e) {
+            e.preventDefault();
+            const regName = document.getElementById('regFullName').value;
+            if(regName) currentUser.name = regName;
+            updateProfileUI();
+            document.getElementById('authModal').classList.add('hidden');
+            showToast("Akkount yaratildi va tizimga kirildi!");
+        }
+
+        function handleLogout() {
+            document.getElementById('authModal').classList.remove('hidden');
+            showToast("Tizimdan chiqildi");
+        }
+
+        // PROFILE MANAGEMENT
+        function updateProfileUI() {
+            document.getElementById('navUserName').innerText = currentUser.name;
+            document.getElementById('profileNameBig').innerText = currentUser.name;
+            document.getElementById('profileFarmBig').innerHTML = `<i class="fa-solid fa-location-dot mr-1.5 text-emerald-300"></i>"${currentUser.farm}"`;
+            document.getElementById('profPhone').innerText = currentUser.phone;
+            document.getElementById('profEmail').innerText = currentUser.email;
+            document.getElementById('profLandArea').innerText = currentUser.land;
+
+            // Form preset values
+            document.getElementById('editName').value = currentUser.name;
+            document.getElementById('editFarm').value = currentUser.farm;
+            document.getElementById('editPhone').value = currentUser.phone;
+            document.getElementById('editLand').value = currentUser.land;
+        }
+
+        function openEditProfileModal() {
+            document.getElementById('modalEditProfile').classList.remove('hidden');
+        }
+
+        function saveProfileChanges(e) {
+            e.preventDefault();
+            currentUser.name = document.getElementById('editName').value;
+            currentUser.farm = document.getElementById('editFarm').value;
+            currentUser.phone = document.getElementById('editPhone').value;
+            currentUser.land = document.getElementById('editLand').value;
+
+            updateProfileUI();
+            closeModal('modalEditProfile');
+            showToast("Profil ma'lumotlari yangilandi!");
+        }
+
+        // KUNDALIK (LOGBOOK) LOGIC
+        function renderDiaryEntries(filter = 'all') {
+            const container = document.getElementById('diaryListContainer');
+            container.innerHTML = '';
+
+            const list = filter === 'all' ? diaryEntries : diaryEntries.filter(item => item.category === filter);
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center bg-white dark:bg-slate-800 rounded-3xl text-slate-400 text-xs">Ushbu turdagi yozuvlar mavjud emas</div>`;
+                return;
+            }
+
+            list.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4";
+                card.innerHTML = `
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">
+                            <i class="fa-solid fa-book"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">${item.category}</span>
+                                <span class="text-xs text-slate-400 font-medium">${item.date}</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 dark:text-slate-100 text-sm mt-1">${item.field}</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${item.text}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteDiaryEntry(${item.id})" class="text-slate-400 hover:text-rose-500 text-xs p-2"><i class="fa-solid fa-trash"></i></button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterDiary(cat) {
+            renderDiaryEntries(cat);
+        }
+
+        function openAddDiaryModal() {
+            document.getElementById('modalAddDiary').classList.remove('hidden');
+        }
+
+        function saveDiaryEntry(e) {
+            e.preventDefault();
+            const newEntry = {
+                id: Date.now(),
+                category: document.getElementById('diaryCategory').value,
+                field: document.getElementById('diaryField').value,
+                date: document.getElementById('diaryDate').value,
+                text: document.getElementById('diaryContent').value
+            };
+            diaryEntries.unshift(newEntry);
+            renderDiaryEntries();
+            closeModal('modalAddDiary');
+            showToast("Kundalikka yangi yozuv qo'shildi!");
+        }
+
+        function deleteDiaryEntry(id) {
+            diaryEntries = diaryEntries.filter(i => i.id !== id);
+            renderDiaryEntries();
+            showToast("Yozuv o'chirildi");
+        }
+
+        // CALENDAR RENDERER
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // Render 31 calendar days
+            for (let day = 1; day <= 31; day++) {
+                const cell = document.createElement('div');
+                cell.className = "min-h-[80px] p-2 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-100 dark:border-slate-700/60 flex flex-col justify-between hover:bg-emerald-50/50 dark:hover:bg-slate-700 transition";
+                
+                let tagHtml = '';
+                if (day === 8) {
+                    tagHtml = `<span class="bg-blue-100 text-blue-800 text-[9px] px-1.5 py-0.5 rounded font-bold">Sug'orish</span>`;
+                } else if (day === 15) {
+                    tagHtml = `<span class="bg-amber-100 text-amber-800 text-[9px] px-1.5 py-0.5 rounded font-bold">O'g'itlash</span>`;
+                } else if (day === 22) {
+                    tagHtml = `<span class="bg-emerald-100 text-emerald-800 text-[9px] px-1.5 py-0.5 rounded font-bold">Tekshiruv</span>`;
+                }
+
+                cell.innerHTML = `
+                    <span class="font-extrabold text-slate-700 dark:text-slate-300 ${day === 13 ? 'w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center' : ''}">${day}</span>
+                    <div>${tagHtml}</div>
+                `;
+                grid.appendChild(cell);
+            }
+        }
+
+        function changeCalendarMonth(delta) {
+            showToast("Kalendar oyi yangilandi");
+        }
+
+        function openAddEventModal() {
+            showToast("Tadbir qo'shish uchun kunni tanlang");
+        }
+
+        // EXPENSES MONITORING LOGIC
+        function renderExpenses() {
+            const tbody = document.getElementById('expenseTableBody');
+            tbody.innerHTML = '';
+
+            let total = 0;
+            expenseEntries.forEach(item => {
+                total += item.amount;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-700/30 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-medium">${item.date}</td>
+                    <td class="p-3"><span class="bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded-lg font-bold">${item.category}</span></td>
+                    <td class="p-3 font-semibold text-slate-800 dark:text-slate-200">${item.desc}</td>
+                    <td class="p-3 font-extrabold text-emerald-600 dark:text-emerald-400">${item.amount.toLocaleString('uz-UZ')} UZS</td>
+                    <td class="p-3 text-right"><button onclick="deleteExpense(${item.id})" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('totalExpensesAmount').innerText = total.toLocaleString('uz-UZ') + " UZS";
+        }
+
+        function openAddExpenseModal() {
+            document.getElementById('modalAddExpense').classList.remove('hidden');
+        }
+
+        function saveExpenseEntry(e) {
+            e.preventDefault();
+            const newExp = {
+                id: Date.now(),
+                category: document.getElementById('expCategory').value,
+                amount: parseFloat(document.getElementById('expAmount').value),
+                date: document.getElementById('expDate').value,
+                desc: document.getElementById('expDesc').value
+            };
+            expenseEntries.unshift(newExp);
+            renderExpenses();
+            closeModal('modalAddExpense');
+            showToast("Harajat muvaffaqiyatli saqlandi!");
+        }
+
+        function deleteExpense(id) {
+            expenseEntries = expenseEntries.filter(i => i.id !== id);
+            renderExpenses();
+            showToast("Harajat o'chirildi");
+        }
+
+        function searchExpenses() {
+            const query = document.getElementById('expenseSearchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#expenseTableBody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // ARCHIVE DATABASE LOGIC
+        function renderArchiveRecords() {
+            const grid = document.getElementById('archiveGrid');
+            const yearFilter = document.getElementById('archiveYearFilter').value;
+            grid.innerHTML = '';
+
+            const filtered = yearFilter === 'all' ? archiveData : archiveData.filter(i => i.year === yearFilter);
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between";
+                card.innerHTML = `
+                    <div class="space-y-1">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${item.year}-Yil</span>
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 text-sm">${item.title}</h4>
+                        <p class="text-xs text-slate-400">Ekin: ${item.crop} • Hosildorlik: ${item.yield}</p>
+                    </div>
+                    <button onclick="showToast('Arxiv hujjati yuklab olindi')" class="p-2.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-100 transition"><i class="fa-solid fa-download"></i></button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // UTILITY FUNCTIONS
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function toggleDarkMode() {
+            const body = document.getElementById('appBody');
+            const icon = document.getElementById('themeToggleIcon');
+            body.classList.toggle('dark');
+            if (body.classList.contains('dark')) {
+                icon.className = "fa-solid fa-sun";
+            } else {
+                icon.className = "fa-solid fa-moon";
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-5 right-5 bg-slate-800 text-white px-4 py-3 rounded-2xl shadow-xl z-50 text-xs font-semibold flex items-center space-x-2 animate-bounce';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i><span>${msg}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
